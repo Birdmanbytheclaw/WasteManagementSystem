@@ -4,6 +4,7 @@ using System.Text;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using WasteManagement.Models;
 
 namespace WasteManagement.Data
 {
@@ -33,5 +34,7 @@ namespace WasteManagement.Data
                 }
            );
         }
+        public DbSet<WasteManagement.Models.Customer> Customer { get; set; }
+        public DbSet<WasteManagement.Models.Employee> Employee { get; set; }
     }
 }
