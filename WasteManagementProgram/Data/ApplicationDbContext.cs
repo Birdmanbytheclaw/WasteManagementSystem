@@ -1,0 +1,21 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using WasteManagementProgram.Models;
+
+namespace WasteManagementProgram.Data
+{
+    public class ApplicationDbContext : IdentityDbContext
+    {
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+            : base(options)
+        {
+        }
+        public DbSet<WasteManagementProgram.Models.Addresses> Addresses { get; set; }
+        public DbSet<WasteManagementProgram.Models.Customer> Customer { get; set; }
+        public DbSet<WasteManagementProgram.Models.Employee> Employee { get; set; }
+        public DbSet<WasteManagementProgram.Models.ServiceInfo> ServiceInfo { get; set; }
+    }
+}
