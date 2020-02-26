@@ -22,6 +22,14 @@ namespace WasteManagement.Data
                 {
                     Name = "Admin",
                     NormalizedName = "ADMIN"
+                },
+                new IdentityRole { 
+                Name = "Customer",
+                NormalizedName = "CUSTOMER"
+                },
+                new IdentityRole { 
+                Name = "Employee",
+                NormalizedName = "EMPLOYEE"
                 }
            );
         }
