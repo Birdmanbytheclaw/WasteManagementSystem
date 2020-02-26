@@ -36,5 +36,7 @@ namespace WasteManagement.Data
         }
         public DbSet<WasteManagement.Models.Customer> Customer { get; set; }
         public DbSet<WasteManagement.Models.Employee> Employee { get; set; }
+        public DbSet<WasteManagement.Models.Addresses> Addresses { get; set; }
+        public DbSet<WasteManagement.Models.ServiceInfo> AccountInfo { get; set; }
     }
 }
