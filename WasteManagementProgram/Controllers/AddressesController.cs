@@ -20,7 +20,7 @@ namespace WasteManagementProgram.Controllers
         }
 
         // GET: Addresses
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int? id)
         {
             return View(await _context.Addresses.ToListAsync());
         }

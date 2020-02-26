@@ -32,6 +32,22 @@ namespace WasteManagementProgram.Controllers
             }
             return RedirectToAction("Details");
         }
+        public IActionResult Addresses()
+        {
+
+            var userId = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var customer = _context.Customer.FirstOrDefault(a => a.IdentityUserId == userId);
+           
+            return View(customer);
+        }
+        public IActionResult ServiceInfoes()
+        {
+
+            var userId = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var customer = _context.Customer.FirstOrDefault(a => a.IdentityUserId == userId);
+         
+            return View(customer);
+        }
 
         // GET: Customers/Details/5
         public async Task<IActionResult> Details()
@@ -61,13 +77,13 @@ namespace WasteManagementProgram.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,IdentityUserId")] Customer customer)
+        public IActionResult Create([Bind("Id,Name,IdentityUserId")] Customer customer)
         {
             if (ModelState.IsValid)
             {
                 _context.Add(customer);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Details));
             }
             ViewData["IdentityUserId"] = new SelectList(_context.Users, "Id", "Id", customer.IdentityUserId);
             return View();

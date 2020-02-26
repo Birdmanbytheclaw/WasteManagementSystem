@@ -21,7 +21,7 @@ namespace WasteManagementProgram.Controllers
 
         public IActionResult Index()
         {
-            var userId = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
+          var userId = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null)
             {
                 return Redirect("./Identity/Account/Login");
@@ -32,7 +32,7 @@ namespace WasteManagementProgram.Controllers
             }
             if (User.IsInRole("Employee"))
             {
-
+                
                 return RedirectToAction("Index", "Employees");
             }
             return View("Details", "Customers");
