@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.AspNetCore.Identity;
@@ -40,5 +41,6 @@ namespace WasteManagementProgram.Data
         public DbSet<WasteManagementProgram.Models.Customer> Customer { get; set; }
         public DbSet<WasteManagementProgram.Models.Employee> Employee { get; set; }
         public DbSet<WasteManagementProgram.Models.ServiceInfo> ServiceInfo { get; set; }
+        public IEnumerable ServiceInfos { get; internal set; }
     }
 }

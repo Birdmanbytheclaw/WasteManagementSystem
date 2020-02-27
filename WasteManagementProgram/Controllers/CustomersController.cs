@@ -23,7 +23,6 @@ namespace WasteManagementProgram.Controllers
         // GET: Customers
         public IActionResult Index()
         {
-
             var userId = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
             var customer = _context.Customer.FirstOrDefault(a => a.IdentityUserId == userId);
             if (customer is null)
@@ -32,34 +31,20 @@ namespace WasteManagementProgram.Controllers
             }
             return RedirectToAction("Details");
         }
-        public IActionResult Addresses()
-        {
-
-            var userId = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var customer = _context.Customer.FirstOrDefault(a => a.IdentityUserId == userId);
-           
-            return View(customer);
-        }
-        public IActionResult ServiceInfoes()
-        {
-
-            var userId = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var customer = _context.Customer.FirstOrDefault(a => a.IdentityUserId == userId);
-         
-            return View(customer);
-        }
 
         // GET: Customers/Details/5
-        public async Task<IActionResult> Details()
+        public IActionResult Details(int? id)
         {
             var userId = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var customer = _context.Customer.FirstOrDefault(a => a.IdentityUserId == userId);
+            if (userId == null)
+            {
+                return RedirectToAction("Create", "Customer");
+            }
 
-            var customer = await _context.Customer
-                .Include(c => c.IdentityUser)
-                .FirstOrDefaultAsync(m => m.IdentityUserId == userId);
             if (customer == null)
             {
-                return NotFound();
+                return RedirectToAction("Index", "Home");
             }
 
             return View(customer);
@@ -68,7 +53,7 @@ namespace WasteManagementProgram.Controllers
         // GET: Customers/Create
         public IActionResult Create()
         {
-            ViewData["IdentityUserId"] = new SelectList(_context.Users, "Id", "Id");
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id");
             return View();
         }
 
@@ -77,32 +62,33 @@ namespace WasteManagementProgram.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create([Bind("Id,Name,IdentityUserId")] Customer customer)
+        public IActionResult Create([Bind("FirstName,LastName,Address,ServiceInfo")] Customer customer)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(customer);
-                _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Details));
+                var userId = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                customer.IdentityUserId = userId;
+                //customer.Pickup = new Pickup();
+
+                _context.Customer.Add(customer);
+                _context.SaveChanges();
+                return RedirectToAction("Index", "Addresses");
             }
-            ViewData["IdentityUserId"] = new SelectList(_context.Users, "Id", "Id", customer.IdentityUserId);
-            return View();
+            ViewData["AddressId"] = new SelectList(_context.Set<Addresses>(), "Id", "Id", customer.Id);
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", customer.IdentityUserId);
+            //ViewData["PickupId"] = new SelectList(_context.Set<Pickup>(), "Id", "Id", customer.PickupId);
+
+            return View(customer);
         }
 
         // GET: Customers/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        public IActionResult Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var customer = await _context.Customer.FindAsync(id);
-            if (customer == null)
-            {
-                return NotFound();
-            }
-            ViewData["IdentityUserId"] = new SelectList(_context.Users, "Id", "Id", customer.IdentityUserId);
+            var userId = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var customer = _context.Customer.FirstOrDefault(a => a.IdentityUserId == userId);
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", customer.Id);
+            ViewData["AddressId"] = new SelectList(_context.Addresses, "Id", "Id", Addresses.Id);
+            ViewData["ServiceInfoId"] = new SelectList(_context.ServiceInfos, "Id", "Id", customer.ServiceInfoes);
             return View(customer);
         }
 
@@ -111,19 +97,27 @@ namespace WasteManagementProgram.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,IdentityUserId")] Customer customer)
+        public IActionResult Edit(int id, [Bind("FirstName,LastName,AddressId,ServiceInfoId")] Customer customer)
         {
-            if (id != customer.Id)
+            var userId = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var customerOne = _context.Customer.FirstOrDefault(a => a.IdentityUserId == userId);
+            if (id != customerOne.Id)
             {
                 return NotFound();
             }
+
+            Customer editCustomer = _context.Customer.Find(id);
+            editCustomer.FirstName = customer.FirstName;
+            editCustomer.LastName = customer.LastName;
+            editCustomer.AddressId = customer.AddressId;
+            editCustomer.ServiceInfoId = customer.ServiceInfoId;
 
             if (ModelState.IsValid)
             {
                 try
                 {
                     _context.Update(customer);
-                    await _context.SaveChangesAsync();
+                    _context.SaveChanges();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -138,21 +132,25 @@ namespace WasteManagementProgram.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["IdentityUserId"] = new SelectList(_context.Users, "Id", "Id", customer.IdentityUserId);
+            ViewData["AddressId"] = new SelectList(_context.Addresses, "Id", "Id", customer.AddressesId);
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", customer.IdentityUserId);
+            ViewData["ServiceInfoId"] = new SelectList(_context.ServiceInfos, "Id", "Id", customer.ServiceInfoesId);
             return View(customer);
         }
 
         // GET: Customers/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        public IActionResult Delete(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            var customer = await _context.Customer
+            var customer = _context.Customer
+                .Include(c => c.Address)
                 .Include(c => c.IdentityUser)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .Include(c => c.ServiceInfo)
+                .FirstOrDefault(m => m.Id == id);
             if (customer == null)
             {
                 return NotFound();
