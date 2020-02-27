@@ -107,8 +107,7 @@ namespace WasteManagementProgram.Controllers
             }
 
             Customer editCustomer = _context.Customer.Find(id);
-            editCustomer.FirstName = customer.FirstName;
-            editCustomer.LastName = customer.LastName;
+            editCustomer.Name = customer.Name;
             editCustomer.AddressId = customer.AddressId;
             editCustomer.ServiceInfoId = customer.ServiceInfoId;
 
@@ -147,7 +146,7 @@ namespace WasteManagementProgram.Controllers
             }
 
             var customer = _context.Customer
-                .Include(c => c.Address)
+                .Include(c => c.Addresses)
                 .Include(c => c.IdentityUser)
                 .Include(c => c.ServiceInfo)
                 .FirstOrDefault(m => m.Id == id);
