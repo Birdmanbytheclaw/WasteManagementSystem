@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -50,28 +51,28 @@ namespace TrashCollector.Controllers
         // GET: Customers/Create
         public IActionResult Create()
         {
-            ViewData["AddressId"] = new SelectList(_context.Address, "Id", "Id");
             ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id");
-            ViewData["ServiceInfoId"] = new SelectList(_context.Set<ServiceInfo>(), "Id", "Id");
             return View();
         }
-
         // POST: Customers/Create
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,FirstName,LastName,AddressId,ServiceInfoId,UserId")] Customer customer)
+        public IActionResult Create([Bind("FirstName,LastName,Address,ServiceInfo")] Customer customer)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(customer);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                var userId = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                customer.UserId = userId;
+                //customer.Pickup = new Pickup();
+                _context.Customer.Add(customer);
+                _context.SaveChanges();
+                return RedirectToAction("Index", "Addresses");
             }
-            ViewData["AddressId"] = new SelectList(_context.Address, "Id", "Id", customer.AddressId);
+            ViewData["AddressId"] = new SelectList(_context.Set<Address>(), "Id", "Id", customer.AddressId);
             ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", customer.UserId);
-            ViewData["ServiceInfoId"] = new SelectList(_context.Set<ServiceInfo>(), "Id", "Id", customer.ServiceInfoId);
+            //ViewData["PickupId"] = new SelectList(_context.Set<Pickup>(), "Id", "Id", customer.PickupId);
             return View(customer);
         }
 
