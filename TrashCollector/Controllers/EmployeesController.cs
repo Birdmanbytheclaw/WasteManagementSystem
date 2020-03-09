@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -20,12 +21,17 @@ namespace TrashCollector.Controllers
         }
 
         // GET: Employees
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-            var applicationDbContext = _context.Employee.Include(e => e.Address).Include(e => e.IdentityUser);
-            return View(await applicationDbContext.ToListAsync());
+            var userId = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var employee = _context.Employee.Include(c => c.Address).Where(a => a.IdentityUserId == userId).FirstOrDefault();
+            if (employee == null)
+            {
+                return RedirectToAction("Create", "Employees");
+            }
+            var users = _context.Customer.Include(e => e.Address).Where(a => a.Address.Zip == employee.Address.Zip).ToList();
+            return View(users);
         }
-
         // GET: Employees/Details/5
         public async Task<IActionResult> Details(int? id)
         {
@@ -63,6 +69,8 @@ namespace TrashCollector.Controllers
         {
             if (ModelState.IsValid)
             {
+                employee.IdentityUserId = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
                 _context.Add(employee);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -161,6 +169,16 @@ namespace TrashCollector.Controllers
         private bool EmployeeExists(int id)
         {
             return _context.Employee.Any(e => e.Id == id);
+        }
+
+        public IActionResult Confirm(int? id)
+        {
+            var customer = _context.Customer.FirstOrDefault(c => c.Id == id);
+            var service = _context.ServiceInfo.FirstOrDefault(s => s.Id == customer.ServiceInfoId);
+            service.Balance += 25;
+            service.IsPickedUp = true;
+            _context.SaveChanges();
+            return RedirectToAction("Index", "Employees");
         }
     }
 }

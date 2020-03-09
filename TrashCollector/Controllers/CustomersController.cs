@@ -21,39 +21,39 @@ namespace TrashCollector.Controllers
         }
 
         // GET: Customers
-        public async Task<IActionResult> Index()
+
+        public IActionResult Index()
         {
-            var applicationDbContext = _context.Customer.Include(c => c.Address).Include(c => c.IdentityUser).Include(c => c.ServiceInfo);
-            return View(await applicationDbContext.ToListAsync());
+            var userId = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var customer = _context.Customer.FirstOrDefault(a => a.UserId == userId);
+            if (customer is null)
+            {
+                return RedirectToAction("Create");
+            }
+            return RedirectToAction("Details");
         }
 
         // GET: Customers/Details/5
-        public async Task<IActionResult> Details(int? id)
+        public IActionResult Details(int? id)
         {
-            if (id == null)
+            var userId = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var customer = _context.Customer.FirstOrDefault(a => a.UserId == userId);
+            if (userId == null)
             {
-                return NotFound();
+                return RedirectToAction("Create", "Customer");
             }
-
-            var customer = await _context.Customer
-                .Include(c => c.Address)
-                .Include(c => c.IdentityUser)
-                .Include(c => c.ServiceInfo)
-                .FirstOrDefaultAsync(m => m.Id == id);
             if (customer == null)
             {
-                return NotFound();
+                return RedirectToAction("Index", "Home");
             }
-
             return View(customer);
         }
-
-        // GET: Customers/Create
-        public IActionResult Create()
-        {
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id");
-            return View();
-        }
+            // GET: Customers/Create
+            public IActionResult Create()
+            {
+                ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id");
+                return View();
+            }
         // POST: Customers/Create
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
@@ -77,18 +77,11 @@ namespace TrashCollector.Controllers
         }
 
         // GET: Customers/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        public IActionResult Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
 
-            var customer = await _context.Customer.FindAsync(id);
-            if (customer == null)
-            {
-                return NotFound();
-            }
+            var userId = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var customer = _context.Customer.FirstOrDefault(a => a.UserId == userId);
             ViewData["AddressId"] = new SelectList(_context.Address, "Id", "Id", customer.AddressId);
             ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", customer.UserId);
             ViewData["ServiceInfoId"] = new SelectList(_context.Set<ServiceInfo>(), "Id", "Id", customer.ServiceInfoId);
@@ -100,19 +93,26 @@ namespace TrashCollector.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,FirstName,LastName,AddressId,ServiceInfoId,UserId")] Customer customer)
+        public IActionResult Edit(int id, [Bind("Id,FirstName,LastName,AddressId,ServiceInfoId,UserId")] Customer customer)
         {
-            if (id != customer.Id)
+            var userId = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var customerOne = _context.Customer.FirstOrDefault(a => a.UserId == userId);
+            if (id != customerOne.Id)
             {
                 return NotFound();
             }
 
+            Customer editCustomer = _context.Customer.Find(id);
+            editCustomer.FirstName = customer.FirstName;
+            editCustomer.LastName = customer.LastName;
+            editCustomer.AddressId = customer.AddressId;
+            editCustomer.ServiceInfoId = customer.ServiceInfoId;
             if (ModelState.IsValid)
             {
                 try
                 {
                     _context.Update(customer);
-                    await _context.SaveChangesAsync();
+                    _context.SaveChanges();
                 }
                 catch (DbUpdateConcurrencyException)
                 {

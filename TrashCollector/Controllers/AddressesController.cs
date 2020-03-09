@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -22,7 +23,9 @@ namespace TrashCollector.Controllers
         // GET: Addresses
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Address.ToListAsync());
+            var userId = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var customer = _context.Customer.FirstOrDefault(a => a.UserId == userId);
+            return View(await _context.Customer.Where(a => a.Id == customer.AddressId).ToListAsync());
         }
 
         // GET: Addresses/Details/5
